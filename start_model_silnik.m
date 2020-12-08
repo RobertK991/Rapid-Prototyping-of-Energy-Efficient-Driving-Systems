@@ -1,5 +1,11 @@
 clear all; clc; close all;
+load('K.mat');
+load('nastawy.mat');
+h = 0.01;
+stopTime = 80;
 
+model.licznik = 0.314656258763423;
+model.mianownik = [1,1.00277037976700,0];
 %% Char. statyczna
 clear all
 h = 0.01;
@@ -132,35 +138,13 @@ model.mianownik = [1,1.00277037976700,0];
 u = 2.5;
 stopTime = 80;
 
-% Model i silnik - regulator P
-out = sim('model7.slx'); 
+%Nastawy obliczone
+load('nastawy.mat');
 
-%Wyświetlanie P
-figure;
-yline(u,'--');
-hold on;
-plot(out.tout,out.yPlantP);
-plot(out.tout,out.yModelP);
-title(['Output, u = ', num2str(u), ', regulator P']);
-ylabel('y [rad]');
-xlabel('time');
-grid on;
-legend('Set value','Plant', 'Model');
+sub.F = 1;
+sub.T = 1;
+strojenieReczne('model7.slx', regP, regPID, sub);
 
-% Regulator PID
-% Wartość zadana
-
-%Wyświetlanie PID
-figure;
-yline(u,'--');
-hold on;
-plot(out.tout,out.yPlantPID);
-plot(out.tout,out.yModelPID);
-title(['Output, u = ', num2str(u), ', regulator PID']);
-ylabel('y [rad]');
-xlabel('time');
-grid on;
-legend('Set value','Plant', 'Model');
 
 %% Punkt 8
 stopTime = 80;
@@ -199,63 +183,98 @@ legend('Set value','Plant', 'Model');
 
 end
 
-%% Punkt 9 - dokończ go Robercik, - dwa optymalne regulatory - parametry
-stopTime = 80;
-% wartośc zadana
-u = 2;
-
+%% Punkt 9 - dokończ go, - dwa optymalne regulatory - parametry
+close all;
+% krP = 0.954623487930613
+% kr = 1.14554818551674
+% ti = 6.267499999999997
+% td = 1.566874999999999
 
 % Ręczna zmiana nastaw 
-kr = [];
-Ti = [];
-Td = [];
-licznik = length(kr);
+% krP = [0.5, 0.95, 1.2, 2];
+stopTime = 90;
+% wartośc zadana
+u = 1;
 
+krP = [1.2, 2];
+krPID = [2, 4];
+Ti = [ 7, 7];
+Td = [0.1, 0.9];
+
+freq = 0.1; %Zmiana częstotliwośći
+
+% Do bloku chirp
+freqInit = 0.05;
+freqTime = 90;
+freqTarget = 0.2;
+
+licznik = length(krP);
 for i = 1:1:licznik
+% 
+% modelNazwa = 'model9_sin.slx';    %Wymuszenie sinusem
+% modelNazwa = 'model9_prost.slx';  %Wymuszenie prostokątnym
+% modelNazwa = 'model9_sinZmienny.slx'; %Wym. sin z zmienną częstotliwością
+modelNazwa = 'model7.slx';        % Wymuszenie step
+regP.kr = krP(i);
 
-out = sim('model7.slx'); 
+regPID.kr = krPID(i);
+regPID.Ti = Ti(i);
+regPID.Td = Td(i); 
 
-% Regulator P
-figure(1);
-subplot(licznik,1,i);
-yline(u,'--');
-hold on;
-plot(out.tout,out.yPlantP);
-plot(out.tout,out.yModelP);
-title(['Output, u = ', num2str(u), ', regulator P']);
-ylabel('y [rad]');
-xlabel('time');
-grid on;
-legend('Set value','Plant', 'Model');
 
-% Regulator PID
-figure(2);
-subplot(licznik,1,i);
-yline(u,'--');
-hold on;
-plot(out.tout,out.yPlantPID);
-plot(out.tout,out.yModelPID);
-title(['Output, u = ', num2str(u), ', regulator PID']);
-ylabel('y [rad]');
-xlabel('time');
-grid on;
-legend('Set value','Plant', 'Model');
+sub.F = licznik;
+sub.T = i;
+strojenieReczne(modelNazwa, regP, regPID, sub);
 
 end
 
+%% Zmiany PID
+%{
+% close all;
 
+u = 1;
+freq = 0.1
 
+krPID = [2];
+% Ti = [1, 4, 6.26, 8];
+Ti = [ 7];
+Td = [0.1];
 
+licznik = length(krPID);
+licznikTi = length(Ti);
+licznikTd = length(Td);
+for i = 1:1:licznik
+    for j = 1:1:licznikTi
+        for k = 1:1:licznikTd
+        
+        regPID.kr = krPID(i);
+        regPID.Ti = Ti(j);
+        regPID.Td = Td(k); 
 
+        out = sim('model9_prost.slx'); 
+        out = sim('model9_prost.slx'); 
+        
+        % Regulator PID
+        figure(i);
+        subplot(licznik,1,k);   %zmiana j lub k 
+        plot(out.tout, out.setValue,'k--');
+        hold on;
+        plot(out.tout,out.yPlantPID, 'b');
+        plot(out.tout,out.yModelPID, 'r');
+        title(['kr=', num2str(regPID.kr), ' Ti=', num2str(regPID.Ti), ' Td=', num2str(regPID.Td) ', regulator PID']);
+        ylabel('y [rad]');
+        xlabel('time');
+        grid on;
+        legend('Set value','Plant', 'Model');
 
+        end
+    end
+end
+%}
 
-
-
-
-
-
-
-
+regP.kr = 1.2;  %Prostokątne: Przy większych wzmocnieniach są przeregulowania
+%Sin: Im większe tym lepiej podąża za sinusem.
+% regP.kr = 2;  % Większe przeregulowania, lepeij podąża za sinusem
 
 
 
