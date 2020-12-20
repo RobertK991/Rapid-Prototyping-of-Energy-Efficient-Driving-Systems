@@ -159,18 +159,18 @@ set = [];   % puste - żeby wyśweitlić setValue
 sub.F = 1;
 sub.T = 1;
 u = uInit(1);
-kolory = ['b','r'];
+kolory = [1 0 0, 1 1 0];
 legenda = [string(['Plant u = ',num2str(u)]),string(['Model u = ',num2str(u)])];
 strojenieReczne('model7.slx', regP, regPID, sub, kolory, set, legenda);
 
 set = 1;
 u = uInit(2);
-kolory = ['y','c'];
+kolory = [1 1 0, 0 1 1];
 legenda = [string(['Plant u = ',num2str(u)]),string(['Model u = ',num2str(u)])];
 strojenieReczne('model7.slx', regP, regPID, sub, kolory, set, legenda);
 
 u = uInit(3);
-kolory = ['m','g'];
+kolory = [1 0 1, 0 1 0];
 legenda = [string(['Plant u = ',num2str(u)]),string(['Model u = ',num2str(u)])];
 strojenieReczne('model7.slx', regP, regPID, sub, kolory, set, legenda);
 %{
@@ -405,67 +405,62 @@ sub.F = 1;
 sub.T = 1;
 strojenieReczne('model7.slx', regP, regPID, sub);
 
+%% 11
 
-%% 11 - dokończ robercik to !!!!!!!!
-
+close all;
 stopTime = 90;
 u = 1;
+sub.F = 1;
+sub.T = 1;
+
 % Siso tool
 load('sisoNastawy.mat');
-out = sim('model7.slx'); 
-
-% Regulator P - sisotool
-figure(1);
-plot(out.tout, out.setValue,'k--');
-hold on;
-plot(out.tout,out.yPlantP);
-plot(out.tout,out.yModelP);
-
-% Regulator PID - sisotool
-figure(2);
-plot(out.tout, out.setValue,'k--');
-hold on;
-plot(out.tout,out.yPlantPID);
-plot(out.tout,out.yModelPID);
-
-
-
+kolor = [1 0 0, 0 1 0];
+legenda = ["AnaliticPlant", "AnaliticModel"];
+strojenieReczne('model7.slx', regP, regPID, sub,kolor,1,legenda);
 
 % Regulator P Nastawy analityczne
 load('nastawy.mat');
-out = sim('model7.slx'); 
-plot(out.tout,out.yPlantP);
-plot(out.tout,out.yModelP);
+kolor = [0 0.4470 0.7410, 0 0 1];
+legenda = ["SisotoolPlant", "SisotoolModel"];
+strojenieReczne('model7.slx', regP, regPID, sub,kolor,[], legenda);
 
+% Nastawy - średnia z sinus/prostokąt
 
-% Title i opisy
-title(['kr = ', num2str(regP.kr), ', regulator P']);
-ylabel('y [rad]');
-xlabel('time');
-grid on;
+krP = [1.2, 2];
+krPID = [2, 4];
+Ti = [ 7, 7];
+Td = [0.1, 0.9];
+regP.kr = sum(krP)/2;
+regPID.kr = sum(krPID)/2;
+regPID.Ti = sum(Ti)/2;
+regPID.Td = sum(Td)/2;
 
-% Regulator PID
-figure(2);
-plot(out.tout, out.setValue,'k--');
-hold on;
-plot(out.tout,out.yPlantPID);
-plot(out.tout,out.yModelPID);
-
-
-
-% Title i opisy
-title(['kr=', num2str(regPID.kr), ' Ti=', num2str(regPID.Ti), ' Td=', num2str(regPID.Td) ', regulator PID']);
-ylabel('y [rad]');
-xlabel('time');
-grid on;
+kolor = [1 0 1, 0.6350 0.0780 0.1840];
+legenda = ["SinSquarePlant", "SinSquareModel"];
+strojenieReczne('model7.slx', regP, regPID, sub,kolor,[], legenda);
 
 figure(1);
-legend('Set value','Plant', 'Model','Set value', 'SisotoolPlant', 'SisotoolModel');
+title('Regulator P')
 figure(2);
-legend('Set value','Plant', 'Model','Set value', 'SisotoolPlant', 'SisotoolModel');
+title('Regulator PID')
 
+%% Najlepsze - różowe w PID - sin/square oraz Niebieskie w P - sisoTool
+close all;
+stopTime = 90;
+u = 1;
+sub.F = 1;
+sub.T = 1;
 
+load('sisoNastawy.mat');
+krPID = [2, 4];
+Ti = [ 7, 7];
+Td = [0.1, 0.9];
+regPID.kr = sum(krPID)/2;
+regPID.Ti = sum(Ti)/2;
+regPID.Td = sum(Td)/2;
 
+strojenieReczne('model7.slx', regP, regPID, sub,[],1);
 
 
 
